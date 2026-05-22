@@ -12,7 +12,9 @@
 /* ── Header ───────────────────────────────────────────── */
 .m-header {
   flex-shrink: 0;
-  padding: 50px 16px 10px;
+  /* Top padding adapts to iOS notch / dynamic island via safe-area-inset-top.
+     Falls back to 14px in regular browser. */
+  padding: calc(env(safe-area-inset-top) + 14px) 16px 10px;
   background: var(--surface);
   border-bottom: 1px solid var(--line);
   display: flex; align-items: center; gap: 10px;
@@ -193,7 +195,9 @@
 
 /* ── FAB cart bar ─────────────────────────────────────── */
 .m-cart-fab {
-  position: absolute; left: 12px; right: 12px; bottom: 78px;
+  position: fixed; left: 12px; right: 12px;
+  /* Clear the tabbar (~62px content + 20px padding + home indicator) */
+  bottom: calc(82px + env(safe-area-inset-bottom));
   background: var(--ink-1); color: var(--bg);
   border: 0; border-radius: 14px;
   padding: 12px 16px;
@@ -356,7 +360,7 @@
   z-index: 300; display: flex; flex-direction: column;
 }
 .m-scan-head {
-  padding: 50px 14px 12px;
+  padding: calc(env(safe-area-inset-top) + 14px) 14px 12px;
   display: flex; align-items: center; gap: 10px;
   position: relative; z-index: 5;
 }
@@ -413,7 +417,8 @@
 
 /* ── FAB (single floating button, used in Nhập hàng) ──── */
 .m-fab {
-  position: absolute; right: 16px; bottom: 92px;
+  position: fixed; right: 16px;
+  bottom: calc(96px + env(safe-area-inset-bottom));
   width: 56px; height: 56px; border-radius: 28px;
   background: var(--accent); color: white; border: 0;
   display: grid; place-items: center;
@@ -550,7 +555,8 @@
 
 /* ── Toast (mobile) ───────────────────────────────────── */
 .m-toaster {
-  position: fixed; left: 16px; right: 16px; top: 80px;
+  position: fixed; left: 16px; right: 16px;
+  top: calc(env(safe-area-inset-top) + 70px);
   display: flex; flex-direction: column; gap: 6px;
   z-index: 400; pointer-events: none;
 }
