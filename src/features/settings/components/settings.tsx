@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { I } from '@/components/icons';
 import PageHead from '@/components/shared/page-head';
-import { STAFF } from '@/mocks/staff';
+import { useStaff } from '@/features/settings/hooks/use-staff';
 
 interface DeviceRow {
   name: string;
@@ -18,6 +18,8 @@ const DEVICES: DeviceRow[] = [
 ];
 
 export default function Settings() {
+  const { data: staff = [], isLoading } = useStaff();
+
   return (
     <div className="page">
       <PageHead title="Cài đặt" subtitle="Thông tin cửa hàng, nhân viên gia đình, máy in & phương thức thanh toán" />
@@ -30,7 +32,8 @@ export default function Settings() {
             </button>
           </div>
           <div className="staff-list">
-            {STAFF.map((s) => (
+            {isLoading && <div style={{ padding: 12, color: 'var(--ink-3)' }}>Đang tải…</div>}
+            {staff.map((s) => (
               <div key={s.id} className="staff-row">
                 <div className="staff-av" style={{ background: s.color }}>
                   {s.name[0]}

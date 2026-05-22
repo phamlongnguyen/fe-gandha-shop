@@ -4,8 +4,13 @@ import PageHead from '@/components/shared/page-head';
 import Tabs from '@/components/shared/tabs';
 import QRCode from '@/features/qr/components/qr-code';
 import ProductEditor from './product-editor';
-import { CATEGORIES } from '@/mocks/categories';
-import { PRODUCTS } from '@/mocks/products';
+import { useCategories } from '@/features/categories/hooks/use-categories';
+import {
+  useCreateProduct,
+  useDeleteProduct,
+  useProducts,
+  useUpdateProduct,
+} from '@/features/inventory/hooks/use-products';
 import { fmt } from '@/lib/format';
 import type { Product } from '@/types';
 import type { ToastPush } from '@/lib/use-toasts';
@@ -22,26 +27,34 @@ export default function Inventory({ setScanOpen, toast }: InventoryProps) {
   const [q, setQ] = useState('');
   const [showQR, setShowQR] = useState<Product | null>(null);
   const [editing, setEditing] = useState<'new' | Product | null>(null);
-  const [, setTick] = useState(0);
+  const { data: products = [], isLoading } = useProducts();
+  const { data: categories = [] } = useCategories();
+  const createProduct = useCreateProduct();
+  const updateProduct = useUpdateProduct();
+  const deleteProduct = useDeleteProduct();
 
-  const items = PRODUCTS.filter(
+  const items = products.filter(
     (p) =>
       (cat === 'all' || p.cat === cat) &&
       (q === '' || p.name.toLowerCase().includes(q.toLowerCase()) || p.sku.toLowerCase().includes(q.toLowerCase())),
   );
 
-  const removeProduct = (id: string) => {
-    const i = PRODUCTS.findIndex((p) => p.id === id);
-    if (i >= 0) PRODUCTS.splice(i, 1);
-    setTick((t) => t + 1);
-    toast('Đã xóa sản phẩm');
+  const removeProduct = (id: string, name: string) => {
+    deleteProduct.mutate(id, {
+      onSuccess: () => toast(`Đã xóa "${name}"`),
+      onError: (e) => toast(e instanceof Error ? e.message : 'Lỗi khi xóa', 'warn'),
+    });
   };
 
   return (
     <div className="page">
       <PageHead
         title="Sản phẩm & Tồn kho"
-        subtitle={`${PRODUCTS.length} sản phẩm · ${PRODUCTS.filter((p) => !p.service && p.stock <= p.min).length} cảnh báo tồn`}
+        subtitle={
+          isLoading
+            ? 'Đang tải…'
+            : `${products.length} sản phẩm · ${products.filter((p) => !p.service && p.stock <= p.min).length} cảnh báo tồn`
+        }
         actions={
           <>
             <button className="btn ghost" onClick={() => setScanOpen(true)}>
@@ -61,11 +74,11 @@ export default function Inventory({ setScanOpen, toast }: InventoryProps) {
         value={cat}
         onChange={setCat}
         items={[
-          { value: 'all', label: 'Tất cả', count: PRODUCTS.length },
-          ...CATEGORIES.map((c) => ({
+          { value: 'all', label: 'Tất cả', count: products.length },
+          ...categories.map((c) => ({
             value: c.id,
             label: c.name,
-            count: PRODUCTS.filter((p) => p.cat === c.id).length,
+            count: products.filter((p) => p.cat === c.id).length,
           })),
         ]}
       />
@@ -105,11 +118,11 @@ export default function Inventory({ setScanOpen, toast }: InventoryProps) {
               return (
                 <tr key={p.id}>
                   <td>
-                    <div className="prod-mini-thumb">{CATEGORIES.find((c) => c.id === p.cat)?.icon}</div>
+                    <div className="prod-mini-thumb">{categories.find((c) => c.id === p.cat)?.icon}</div>
                   </td>
                   <td>
                     <b>{p.name}</b>
-                    <span className="td-sub">{CATEGORIES.find((c) => c.id === p.cat)?.name} · {p.unit}</span>
+                    <span className="td-sub">{categories.find((c) => c.id === p.cat)?.name} · {p.unit}</span>
                   </td>
                   <td className="mono">{p.sku}</td>
                   <td className="r mono">{fmt(p.cost)}</td>
@@ -151,7 +164,7 @@ export default function Inventory({ setScanOpen, toast }: InventoryProps) {
                         className="iconbtn sm"
                         title="Xóa"
                         onClick={() => {
-                          if (confirm(`Xóa sản phẩm "${p.name}"?`)) removeProduct(p.id);
+                          if (confirm(`Xóa sản phẩm "${p.name}"?`)) removeProduct(p.id, p.name);
                         }}
                       >
                         <I.trash size={14} />
@@ -170,17 +183,27 @@ export default function Inventory({ setScanOpen, toast }: InventoryProps) {
           product={editing === 'new' ? null : editing}
           onClose={() => setEditing(null)}
           onSave={(p) => {
+            const draft = {
+              name: p.name,
+              sku: p.sku,
+              cat: p.cat,
+              cost: p.cost,
+              price: p.price,
+              stock: p.stock,
+            };
+            const opts = {
+              onSuccess: () => {
+                toast(editing === 'new' ? `Đã thêm: ${p.name}` : 'Đã lưu thay đổi');
+                setEditing(null);
+              },
+              onError: (e: unknown) =>
+                toast(e instanceof Error ? e.message : 'Lỗi khi lưu', 'warn'),
+            };
             if (editing === 'new') {
-              const next = PRODUCTS.length + 1;
-              PRODUCTS.push({ ...p, id: `p${String(next).padStart(2, '0')}`, sold30: 0 });
-              toast(`Đã thêm sản phẩm: ${p.name}`, 'ok');
+              createProduct.mutate(draft, opts);
             } else {
-              const i = PRODUCTS.findIndex((x) => x.id === editing.id);
-              if (i >= 0) PRODUCTS[i] = { ...PRODUCTS[i], ...p };
-              toast('Đã lưu thay đổi', 'ok');
+              updateProduct.mutate({ id: editing.id, patch: draft }, opts);
             }
-            setEditing(null);
-            setTick((t) => t + 1);
           }}
         />
       )}

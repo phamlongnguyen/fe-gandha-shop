@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { I } from '@/components/icons';
-import { CATEGORIES } from '@/mocks/categories';
-import { PRODUCTS } from '@/mocks/products';
+import { useCategories } from '@/features/categories/hooks/use-categories';
+import { useProducts } from '@/features/inventory/hooks/use-products';
 import { fmt, makeSku } from '@/lib/format';
 import type { Product, ProductPromo, ProductPromoType } from '@/types';
 
@@ -26,6 +26,8 @@ interface ProductEditorProps {
 
 export default function ProductEditor({ product, onClose, onSave }: ProductEditorProps) {
   const isNew = !product;
+  const { data: categories = [] } = useCategories();
+  const { data: products = [] } = useProducts();
 
   const [form, setForm] = useState<ProductDraft>(() => ({
     name: product?.name ?? '',
@@ -78,7 +80,7 @@ export default function ProductEditor({ product, onClose, onSave }: ProductEdito
       out.promo = form.promo;
     }
     if (isNew && !out.sku) {
-      const n = PRODUCTS.filter((p) => p.cat === out.cat).length + 1;
+      const n = products.filter((p) => p.cat === out.cat).length + 1;
       out.sku = makeSku(out.cat, n);
     }
     onSave(out);
@@ -114,7 +116,7 @@ export default function ProductEditor({ product, onClose, onSave }: ProductEdito
               <div className="pe-row">
                 <label>Nhóm hàng</label>
                 <select value={form.cat} onChange={(e) => set('cat', e.target.value)}>
-                  {CATEGORIES.map((c) => (
+                  {categories.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.icon} {c.name}
                     </option>

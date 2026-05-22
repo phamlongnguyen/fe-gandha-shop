@@ -4,16 +4,24 @@ import { I } from '@/components/icons';
 import EmptyState from '@/components/shared/empty-state';
 import QRScanner from '@/features/qr/components/qr-scanner';
 import PaymentQR from '@/features/qr/components/payment-qr';
-import { CATEGORIES } from '@/mocks/categories';
-import { PRODUCTS } from '@/mocks/products';
-import { CUSTOMERS } from '@/mocks/customers';
+import { useCategories } from '@/features/categories/hooks/use-categories';
+import { useProducts } from '@/features/inventory/hooks/use-products';
+import { useCustomers } from '@/features/customers/hooks/use-customers';
+import { useCreateOrder, type PaymentMethod } from '@/features/pos/hooks/use-create-order';
 import { PROMOS } from '@/mocks/promos';
 import { applyProductPromo } from '@/lib/promo';
 import { fmt } from '@/lib/format';
+import { shortOrderId } from '@/features/orders/hooks/use-orders';
 import type { CartItem, Product, ShopPromo } from '@/types';
 import type { ToastPush } from '@/lib/use-toasts';
 
 type PayMethod = 'cash' | 'qr' | 'card';
+
+const PAY_TO_BE: Record<PayMethod, PaymentMethod> = {
+  cash: 'cash',
+  qr: 'transfer',
+  card: 'card',
+};
 
 interface SuccessState {
   id: string;
@@ -36,7 +44,7 @@ export default function POS({ scanOpen, setScanOpen, toast }: POSProps) {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [discount, setDiscount] = useState(0);
   const [promo, setPromo] = useState<ShopPromo | null>(null);
-  const [customer, setCustomer] = useState('Khách lẻ');
+  const [customerId, setCustomerId] = useState<string | null>(null);
   const [payOpen, setPayOpen] = useState(false);
   const [payMethod, setPayMethod] = useState<PayMethod>('cash');
   const [received, setReceived] = useState('');
@@ -46,7 +54,13 @@ export default function POS({ scanOpen, setScanOpen, toast }: POSProps) {
   const searchRef = useRef<HTMLInputElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
 
-  const products = PRODUCTS.filter(
+  const { data: allProducts = [] } = useProducts();
+  const { data: categories = [] } = useCategories();
+  const { data: customers = [] } = useCustomers();
+  const createOrder = useCreateOrder();
+  const customer = customers.find((c) => c.id === customerId)?.name ?? 'Khách lẻ';
+
+  const products = allProducts.filter(
     (p) =>
       (cat === 'all' || p.cat === cat) &&
       (q === '' || p.name.toLowerCase().includes(q.toLowerCase()) || p.sku.toLowerCase().includes(q.toLowerCase())),
@@ -177,14 +191,27 @@ export default function POS({ scanOpen, setScanOpen, toast }: POSProps) {
 
   const finishPay = () => {
     const receivedAmt = payMethod === 'cash' ? Number(received || total) : total;
-    setSuccess({
-      id: `DH-2604-${String(19 + Math.floor(Math.random() * 9)).padStart(3, '0')}`,
-      total,
-      items: cart.reduce((s, x) => s + x.qty, 0),
-      method: payMethod,
-      received: receivedAmt,
-      change: payMethod === 'cash' ? Math.max(0, receivedAmt - total) : 0,
-    });
+    createOrder.mutate(
+      {
+        customerId,
+        items: cart.map((x) => ({ product_id: x.id, quantity: x.qty })),
+        payment: PAY_TO_BE[payMethod],
+        note: promo ? `Mã: ${promo.code}` : undefined,
+      },
+      {
+        onSuccess: (orderId) => {
+          setSuccess({
+            id: shortOrderId(orderId),
+            total,
+            items: cart.reduce((s, x) => s + x.qty, 0),
+            method: payMethod,
+            received: receivedAmt,
+            change: payMethod === 'cash' ? Math.max(0, receivedAmt - total) : 0,
+          });
+        },
+        onError: (e) => toast(e instanceof Error ? e.message : 'Lỗi khi tạo đơn', 'warn'),
+      },
+    );
   };
 
   const closeSuccess = () => {
@@ -194,6 +221,7 @@ export default function POS({ scanOpen, setScanOpen, toast }: POSProps) {
     setPromo(null);
     setDiscount(0);
     setReceived('');
+    setCustomerId(null);
     toast('Đã lưu đơn hàng', 'ok');
   };
 
@@ -267,13 +295,13 @@ export default function POS({ scanOpen, setScanOpen, toast }: POSProps) {
 
         <div className="pos-cats">
           <button className={`chip-tab ${cat === 'all' ? 'on' : ''}`} onClick={() => setCat('all')}>
-            Tất cả<em>{PRODUCTS.length}</em>
+            Tất cả<em>{allProducts.length}</em>
           </button>
-          {CATEGORIES.map((c) => (
+          {categories.map((c) => (
             <button key={c.id} className={`chip-tab ${cat === c.id ? 'on' : ''}`} onClick={() => setCat(c.id)}>
               <span className="cat-ic">{c.icon}</span>
               {c.name}
-              <em>{PRODUCTS.filter((p) => p.cat === c.id).length}</em>
+              <em>{allProducts.filter((p) => p.cat === c.id).length}</em>
             </button>
           ))}
         </div>
@@ -289,7 +317,7 @@ export default function POS({ scanOpen, setScanOpen, toast }: POSProps) {
                 disabled={!p.service && p.stock <= 0}
               >
                 <div className="prod-thumb">
-                  <span className="prod-cat">{CATEGORIES.find((c) => c.id === p.cat)?.icon}</span>
+                  <span className="prod-cat">{categories.find((c) => c.id === p.cat)?.icon}</span>
                   {p.stock > 0 && p.stock <= p.min && !p.service && <span className="prod-low">Sắp hết</span>}
                   {p.service && <span className="prod-svc">Dịch vụ</span>}
                   {eff.hasPromo && p.promo && (
@@ -324,10 +352,10 @@ export default function POS({ scanOpen, setScanOpen, toast }: POSProps) {
             <div className="cart-title">Giỏ hàng</div>
             <div className="cart-cust">
               <I.user size={12} />
-              <select value={customer} onChange={(e) => setCustomer(e.target.value)}>
-                <option>Khách lẻ</option>
-                {CUSTOMERS.map((c) => (
-                  <option key={c.id}>{c.name}</option>
+              <select value={customerId ?? ''} onChange={(e) => setCustomerId(e.target.value || null)}>
+                <option value="">Khách lẻ</option>
+                {customers.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>
             </div>
@@ -540,8 +568,8 @@ export default function POS({ scanOpen, setScanOpen, toast }: POSProps) {
               <button className="btn ghost" onClick={() => setPayOpen(false)}>
                 Hủy
               </button>
-              <button className="btn primary" onClick={finishPay}>
-                Hoàn tất · {fmt(total)}₫
+              <button className="btn primary" onClick={finishPay} disabled={createOrder.isPending}>
+                {createOrder.isPending ? 'Đang ghi đơn…' : `Hoàn tất · ${fmt(total)}₫`}
               </button>
             </div>
           </div>

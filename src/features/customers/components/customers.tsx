@@ -1,6 +1,6 @@
 import { I } from '@/components/icons';
 import PageHead from '@/components/shared/page-head';
-import { CUSTOMERS } from '@/mocks/customers';
+import { useCustomers } from '@/features/customers/hooks/use-customers';
 import { fmt } from '@/lib/format';
 import type { CustomerTag } from '@/types';
 
@@ -18,12 +18,20 @@ const tagPill: Record<CustomerTag, string> = {
   Mới: 'low',
 };
 
+function initial(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  const last = parts[parts.length - 1] ?? '';
+  return last.charAt(0).toUpperCase() || '?';
+}
+
 export default function Customers() {
+  const { data: customers = [], isLoading } = useCustomers();
+
   return (
     <div className="page">
       <PageHead
         title="Khách hàng"
-        subtitle={`${CUSTOMERS.length} khách quen của tiệm`}
+        subtitle={isLoading ? 'Đang tải…' : `${customers.length} khách quen của tiệm`}
         actions={
           <button className="btn primary">
             <I.plus size={14} /> Thêm khách
@@ -31,15 +39,15 @@ export default function Customers() {
         }
       />
       <div className="cust-grid">
-        {CUSTOMERS.map((c) => (
+        {customers.map((c) => (
           <div key={c.id} className="cust-card">
             <div className="cust-head">
               <div className="cust-avatar" style={{ background: tagColor[c.tag] }}>
-                {c.name.split(' ').slice(-1)[0][0]}
+                {initial(c.name)}
               </div>
               <div>
                 <div className="cust-name">{c.name}</div>
-                <div className="cust-phone">{c.phone}</div>
+                <div className="cust-phone">{c.phone || '—'}</div>
               </div>
               <span className={`pill ${tagPill[c.tag]}`}>{c.tag}</span>
             </div>

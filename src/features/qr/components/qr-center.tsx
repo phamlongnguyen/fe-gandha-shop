@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { I } from '@/components/icons';
 import PageHead from '@/components/shared/page-head';
 import QRCode from './qr-code';
-import { CATEGORIES } from '@/mocks/categories';
-import { PRODUCTS } from '@/mocks/products';
+import { useCategories } from '@/features/categories/hooks/use-categories';
+import { useProducts } from '@/features/inventory/hooks/use-products';
 import { fmt } from '@/lib/format';
 import type { ToastPush } from '@/lib/use-toasts';
 
@@ -12,11 +12,20 @@ interface QRCenterProps {
 }
 
 export default function QRCenter({ toast }: QRCenterProps) {
-  const [pick, setPick] = useState<string[]>(() => PRODUCTS.slice(0, 8).map((p) => p.id));
+  const { data: products = [] } = useProducts();
+  const { data: categories = [] } = useCategories();
+  const printable = products.filter((p) => !p.service);
+  const [pick, setPick] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (pick.length === 0 && printable.length > 0) {
+      setPick(printable.slice(0, 8).map((p) => p.id));
+    }
+  }, [printable, pick.length]);
 
   const isPicked = (id: string) => pick.includes(id);
   const toggle = (id: string) => setPick((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
-  const items = PRODUCTS.filter((p) => pick.includes(p.id));
+  const items = products.filter((p) => pick.includes(p.id));
 
   return (
     <div className="page">
@@ -43,14 +52,14 @@ export default function QRCenter({ toast }: QRCenterProps) {
           <div className="card-head">
             <div className="card-title">Chọn sản phẩm cần in QR</div>
             <span className="muted">
-              {pick.length}/{PRODUCTS.length} đã chọn
+              {pick.length}/{printable.length} đã chọn
             </span>
           </div>
           <div className="qr-pick-list">
-            {PRODUCTS.filter((p) => !p.service).map((p) => (
+            {printable.map((p) => (
               <label key={p.id} className={`qr-pick ${isPicked(p.id) ? 'on' : ''}`}>
                 <input type="checkbox" checked={isPicked(p.id)} onChange={() => toggle(p.id)} />
-                <div className="qp-cat">{CATEGORIES.find((c) => c.id === p.cat)?.icon}</div>
+                <div className="qp-cat">{categories.find((c) => c.id === p.cat)?.icon}</div>
                 <div className="qp-meta">
                   <b>{p.name}</b>
                   <span>

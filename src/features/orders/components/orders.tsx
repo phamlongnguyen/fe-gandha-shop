@@ -2,16 +2,16 @@ import { useState } from 'react';
 import { I } from '@/components/icons';
 import PageHead from '@/components/shared/page-head';
 import Tabs from '@/components/shared/tabs';
-import { ORDERS_SEED } from '@/mocks/orders';
+import { shortOrderId, useOrders } from '@/features/orders/hooks/use-orders';
 import { fmt } from '@/lib/format';
 
 type OrderTab = 'all' | 'today' | 'cash' | 'qr';
 
 export default function Orders() {
   const [tab, setTab] = useState<OrderTab>('all');
-  const ORD = ORDERS_SEED;
+  const { data: orders = [], isLoading } = useOrders({ limit: 100 });
 
-  const filtered = ORD.filter((o) =>
+  const filtered = orders.filter((o) =>
     tab === 'all'
       ? true
       : tab === 'today'
@@ -25,7 +25,7 @@ export default function Orders() {
     <div className="page">
       <PageHead
         title="Lịch sử đơn hàng"
-        subtitle={`${ORD.length} đơn · 2 ngày qua`}
+        subtitle={isLoading ? 'Đang tải…' : `${orders.length} đơn gần nhất`}
         actions={
           <button className="btn ghost">
             <I.download size={14} /> Xuất Excel
@@ -36,13 +36,13 @@ export default function Orders() {
         value={tab}
         onChange={setTab}
         items={[
-          { value: 'all', label: 'Tất cả', count: ORD.length },
-          { value: 'today', label: 'Hôm nay', count: ORD.filter((o) => o.time.includes('Hôm nay')).length },
-          { value: 'cash', label: 'Tiền mặt', count: ORD.filter((o) => o.method === 'Tiền mặt').length },
+          { value: 'all', label: 'Tất cả', count: orders.length },
+          { value: 'today', label: 'Hôm nay', count: orders.filter((o) => o.time.includes('Hôm nay')).length },
+          { value: 'cash', label: 'Tiền mặt', count: orders.filter((o) => o.method === 'Tiền mặt').length },
           {
             value: 'qr',
             label: 'QR / Chuyển khoản',
-            count: ORD.filter((o) => o.method.includes('QR') || o.method.includes('Chuyển')).length,
+            count: orders.filter((o) => o.method.includes('QR') || o.method.includes('Chuyển')).length,
           },
         ]}
       />
@@ -64,7 +64,7 @@ export default function Orders() {
           <tbody>
             {filtered.map((o) => (
               <tr key={o.id}>
-                <td><b>{o.id}</b></td>
+                <td><b>{shortOrderId(o.id)}</b></td>
                 <td>{o.time}</td>
                 <td>{o.customer}</td>
                 <td>{o.items}</td>

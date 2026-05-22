@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { I } from '@/components/icons';
-import { PRODUCTS } from '@/mocks/products';
+import { useProducts } from '@/features/inventory/hooks/use-products';
 import { fmt } from '@/lib/format';
 import type { Product } from '@/types';
 import QRCode from './qr-code';
@@ -16,6 +16,7 @@ interface QRScannerProps {
 export default function QRScanner({ onScan, onClose, mode = 'sell' }: QRScannerProps) {
   const [progress, setProgress] = useState(0);
   const [scanned, setScanned] = useState<Product | null>(null);
+  const { data: products = [] } = useProducts();
 
   useEffect(() => {
     if (scanned) return;
@@ -23,16 +24,18 @@ export default function QRScanner({ onScan, onClose, mode = 'sell' }: QRScannerP
       setProgress((p) => {
         if (p >= 100) {
           clearInterval(id);
-          const pool = PRODUCTS.filter((px) => !px.service && px.stock > 0);
-          const pick = pool[Math.floor(Math.random() * pool.length)];
-          setScanned(pick);
+          const pool = products.filter((px) => !px.service && px.stock > 0);
+          if (pool.length > 0) {
+            const pick = pool[Math.floor(Math.random() * pool.length)];
+            setScanned(pick);
+          }
           return 100;
         }
         return p + 4;
       });
     }, 60);
     return () => clearInterval(id);
-  }, [scanned]);
+  }, [scanned, products]);
 
   const reset = () => {
     setScanned(null);
