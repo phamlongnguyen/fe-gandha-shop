@@ -1,0 +1,15 @@
+// Gandha Shop — global stylesheet entry. Each @use below mounts a partial that
+// owns one slice of the design system. Adding a new partial = @use here.
+
+@use './tokens';
+@use './base';
+@use './shell';
+@use './components';
+
+@use './features/pos';
+@use './features/inventory';
+@use './features/qr';
+@use './features/promo';
+@use './features/customers';
+@use './features/settings';
+@use './features/login';

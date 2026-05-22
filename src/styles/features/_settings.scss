@@ -1,0 +1,16 @@
+// Settings — staff list + device grid.
+
+.staff-list { display: flex; flex-direction: column; gap: 6px; }
+.staff-row { display: grid; grid-template-columns: 36px 1fr auto auto; gap: 10px; align-items: center; padding: 8px; border-radius: var(--radius); }
+.staff-row:hover { background: var(--surface-2); }
+.staff-av { width: 36px; height: 36px; border-radius: 50%; color: white; display: grid; place-items: center; font-size: 14px; font-weight: 600; }
+.staff-meta b { font-size: 13px; font-weight: 600; display: block; }
+.staff-meta span { font-size: 11px; color: var(--ink-3); }
+
+.device-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.device { display: grid; grid-template-columns: 40px 1fr auto; gap: 12px; align-items: center; padding: 12px; border: 1px solid var(--line); border-radius: var(--radius); }
+.device.off { opacity: 0.6; }
+.dev-ic { width: 40px; height: 40px; background: var(--accent-soft); color: var(--accent-deep); border-radius: 8px; display: grid; place-items: center; }
+.device.off .dev-ic { background: var(--surface-2); color: var(--ink-3); }
+.dev-meta b { font-size: 13px; font-weight: 500; display: block; }
+.dev-meta span { font-size: 11px; color: var(--ink-3); }

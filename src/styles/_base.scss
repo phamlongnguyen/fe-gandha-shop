@@ -1,0 +1,21 @@
+// Reset + global typography + helper classes.
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--ink-1);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'cv05', 'cv11', 'ss01';
+}
+input, button, select, textarea { font-family: inherit; color: inherit; }
+button { cursor: pointer; }
+
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.muted { color: var(--ink-3); font-size: 12px; }
+.up    { color: var(--pos); }
+.dn    { color: var(--neg); }
+.down  { color: var(--neg); }

@@ -1,0 +1,53 @@
+// Promo cards + per-product promo modal.
+
+.promo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--gap); }
+.promo-card { display: flex; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; transition: opacity .15s; }
+.promo-card.off { opacity: 0.55; }
+.pc-side { width: 8px; background: linear-gradient(180deg, var(--accent), var(--accent-deep)); position: relative; }
+.pc-side::before, .pc-side::after { content: ''; position: absolute; left: -4px; width: 8px; height: 8px; border-radius: 50%; background: var(--bg); }
+.pc-side::before { top: -4px; }
+.pc-side::after { bottom: -4px; }
+.pc-body { flex: 1; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.pc-top { display: flex; justify-content: space-between; align-items: center; }
+.pc-code { font-family: var(--font-mono); font-weight: 700; letter-spacing: 0.04em; font-size: 13px; color: var(--accent-deep); padding: 3px 8px; background: var(--accent-soft); border-radius: 4px; }
+.pc-name { font-size: 13.5px; font-weight: 600; line-height: 1.3; }
+.pc-discount { display: flex; align-items: baseline; gap: 8px; padding: 10px 0; border-top: 1px dashed var(--line-2); border-bottom: 1px dashed var(--line-2); }
+.pc-discount b { font-size: 32px; font-weight: 800; color: var(--accent); letter-spacing: -0.03em; line-height: 1; }
+.pc-discount b i { font-style: normal; font-size: 18px; }
+.pc-discount span { font-size: 11px; color: var(--ink-3); }
+.pc-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; font-size: 11px; }
+.pc-meta div { display: flex; flex-direction: column; }
+.pc-meta span { color: var(--ink-3); font-size: 10.5px; }
+.pc-meta b { font-size: 12px; font-weight: 500; color: var(--ink-1); }
+.pc-actions { display: flex; gap: 6px; margin-top: 4px; }
+
+// Per-product promo table cell
+.pp-name { display: flex; align-items: center; gap: 10px; }
+.pp-name .pp-cat { font-size: 22px; line-height: 1; color: var(--ink-3); width: 28px; text-align: center; }
+.pp-name b { font-weight: 500; display: block; }
+.pp-name .pp-sku { font-size: 11px; color: var(--ink-3); font-family: var(--font-mono); margin-top: 2px; display: block; }
+
+// Per-product promo modal
+.modal.pp-modal { width: min(520px, 92vw); }
+.pp-form { padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; }
+.pp-row { display: flex; flex-direction: column; gap: 6px; }
+.pp-row > label { font-size: 11.5px; color: var(--ink-3); font-weight: 500; }
+.pp-row input[type="text"],
+.pp-row input[type="date"],
+.pp-row input[type="number"],
+.pp-product-pick select {
+  width: 100%; padding: 9px 11px; font-size: 13px;
+  border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface);
+  color: var(--ink-1); font-family: inherit; outline: none;
+}
+.pp-row input:focus, .pp-product-pick select:focus { border-color: var(--accent); }
+.pp-product-pick { display: flex; flex-direction: column; gap: 6px; padding-bottom: 10px; border-bottom: 1px dashed var(--line); }
+.pp-product-pick label { font-size: 11.5px; color: var(--ink-3); font-weight: 500; }
+.pp-value-input { position: relative; }
+.pp-value-input span { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--ink-3); font-weight: 500; }
+.pp-value-input input { padding-right: 30px !important; }
+
+.pp-preview { background: var(--surface-2); border-radius: var(--radius); padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.pp-prev-row { display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; color: var(--ink-2); }
+.pp-prev-row b { font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ink-1); }
+.pp-prev-row.down b { color: var(--ink-1); }

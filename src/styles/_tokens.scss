@@ -1,0 +1,60 @@
+// Design tokens — driven by TweaksPanel at runtime via data-* attributes on <html>.
+
+:root {
+  --hue: 28;
+  --accent:        oklch(70% 0.18 var(--hue));
+  --accent-deep:   oklch(58% 0.20 var(--hue));
+  --accent-soft:   oklch(96% 0.04 var(--hue));
+  --accent-tint:   oklch(92% 0.07 var(--hue));
+
+  --bg:        oklch(98.6% 0.005 var(--hue));
+  --surface:   #ffffff;
+  --surface-2: oklch(97% 0.005 var(--hue));
+  --ink-1:     oklch(20% 0.01 var(--hue));
+  --ink-2:     oklch(38% 0.01 var(--hue));
+  --ink-3:     oklch(54% 0.01 var(--hue));
+  --ink-4:     oklch(72% 0.01 var(--hue));
+  --line:      oklch(91% 0.008 var(--hue));
+  --line-2:    oklch(94% 0.005 var(--hue));
+
+  --pos: #16a34a;
+  --neg: #dc2626;
+  --warn:#f59e0b;
+
+  --radius-sm: 6px;
+  --radius:    10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  --pad-y: 12px;
+  --pad-x: 14px;
+  --gap:    16px;
+  --row-h:  44px;
+
+  --font: 'Inter', ui-sans-serif, system-ui, -apple-system, 'SF Pro Text', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  --shadow-sm: 0 1px 2px rgba(20, 14, 4, 0.04);
+  --shadow:    0 4px 16px -8px rgba(20, 14, 4, 0.10), 0 1px 2px rgba(20, 14, 4, 0.04);
+  --shadow-lg: 0 24px 60px -24px rgba(20, 14, 4, 0.30), 0 4px 16px -8px rgba(20, 14, 4, 0.10);
+}
+
+[data-dark="1"] {
+  --bg:        oklch(16% 0.012 var(--hue));
+  --surface:   oklch(20% 0.015 var(--hue));
+  --surface-2: oklch(23% 0.015 var(--hue));
+  --ink-1:     oklch(96% 0.006 var(--hue));
+  --ink-2:     oklch(82% 0.008 var(--hue));
+  --ink-3:     oklch(64% 0.008 var(--hue));
+  --ink-4:     oklch(48% 0.008 var(--hue));
+  --line:      oklch(28% 0.012 var(--hue));
+  --line-2:    oklch(25% 0.012 var(--hue));
+  --accent-soft: oklch(28% 0.05 var(--hue));
+  --accent-tint: oklch(34% 0.08 var(--hue));
+}
+
+[data-density="compact"] { --pad-y: 8px;  --pad-x: 11px; --gap: 12px; --row-h: 38px; }
+[data-density="comfy"]   { --pad-y: 16px; --pad-x: 18px; --gap: 22px; --row-h: 50px; }
+
+[data-radius="sharp"]   { --radius-sm: 2px; --radius: 4px; --radius-lg: 6px; --radius-xl: 8px; }
+[data-radius="rounded"] { --radius-sm: 10px; --radius: 14px; --radius-lg: 20px; --radius-xl: 28px; }

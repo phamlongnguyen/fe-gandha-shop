@@ -1,0 +1,57 @@
+// Inventory — product list mini-thumb + product editor modal.
+
+.prod-mini-thumb {
+  width: 32px; height: 32px; background: var(--accent-soft);
+  color: var(--accent-deep); border-radius: 8px;
+  display: grid; place-items: center; font-size: 16px;
+}
+
+// Product Editor modal
+.modal.pe-modal { width: min(640px, 94vw); max-height: 92vh; }
+.pe-body { padding: 8px 22px 16px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; }
+.pe-section { padding: 14px 0; border-bottom: 1px dashed var(--line); display: flex; flex-direction: column; gap: 12px; }
+.pe-section:last-child { border-bottom: 0; }
+.pe-section-title {
+  font-size: 12px; font-weight: 600; color: var(--ink-2);
+  letter-spacing: 0.02em; text-transform: uppercase;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.pe-row { display: flex; flex-direction: column; gap: 5px; }
+.pe-row > label { font-size: 11.5px; color: var(--ink-3); font-weight: 500; }
+.pe-row > label em { color: #E11D48; font-style: normal; }
+.pe-row input[type="text"],
+.pe-row input[type="number"],
+.pe-row input[type="date"],
+.pe-row select {
+  width: 100%; padding: 9px 11px; font-size: 13px;
+  border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface);
+  color: var(--ink-1); font-family: inherit; outline: none;
+}
+.pe-row input:focus, .pe-row select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.pe-row-full { grid-column: 1 / -1; }
+.pe-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.pe-money { position: relative; }
+.pe-money input { padding-right: 28px !important; font-variant-numeric: tabular-nums; }
+.pe-money span { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--ink-3); font-weight: 500; }
+.pe-margin { font-size: 11.5px; color: var(--ink-3); padding: 8px 10px; background: var(--surface-2); border-radius: 6px; }
+.pe-margin b { color: var(--ink-1); font-weight: 600; }
+.pe-margin b.up { color: var(--pos); }
+.pe-margin b.dn { color: var(--neg); }
+.pe-check { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-2); cursor: pointer; }
+.pe-check input { accent-color: var(--accent); }
+.pe-check.inline { font-size: 11px; text-transform: none; letter-spacing: 0; font-weight: 500; }
+
+.pe-promo-empty {
+  font-size: 12px; color: var(--ink-3); padding: 14px;
+  background: var(--surface-2); border-radius: 8px; line-height: 1.5;
+}
+.pe-promo-prev {
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 14px; background: color-mix(in oklab, #E11D48 8%, var(--surface-2));
+  border: 1px solid color-mix(in oklab, #E11D48 25%, var(--line));
+  border-radius: 8px; flex-wrap: wrap;
+}
+.pe-promo-prev > div { display: flex; flex-direction: column; gap: 2px; }
+.pe-promo-prev span { font-size: 10.5px; color: var(--ink-3); }
+.pe-promo-prev b { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ink-1); }
+.pe-promo-prev > svg { color: var(--ink-3); flex-shrink: 0; }
