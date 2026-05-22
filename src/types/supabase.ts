@@ -187,3 +187,150 @@ export type Database = {
           id: string
           payment_method: string
           status: string
+          total: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          id?: string
+          payment_method: string
+          status?: string
+          total?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string | null
+          id?: string
+          payment_method?: string
+          status?: string
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          category_id: string | null
+          cost: number
+          created_at: string
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name: string
+          price: number
+          sku: string | null
+          stock: number
+          updated_at: string
+        }
+        Insert: {
+          category_id?: string | null
+          cost?: number
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name: string
+          price: number
+          sku?: string | null
+          stock?: number
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string | null
+          cost?: number
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name?: string
+          price?: number
+          sku?: string | null
+          stock?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string
+          id: string
+          role: string
+        }
+        Insert: {
+          created_at?: string
+          full_name: string
+          id: string
+          role?: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          id?: string
+          role?: string
+        }
+        Relationships: []
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      adjust_stock: {
+        Args: {
+          p_change_type: string
+          p_note?: string
+          p_product_id: string
+          p_quantity: number
+        }
+        Returns: number
+      }
+      cancel_order: {
+        Args: {
+          p_order_id: string
+          p_reason?: string
+        }
+        Returns: undefined
+      }
+      create_order: {
+        Args: {
+          p_customer_id: string
+          p_items: Json
+          p_note?: string
+          p_payment?: string
+        }
+        Returns: string
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}

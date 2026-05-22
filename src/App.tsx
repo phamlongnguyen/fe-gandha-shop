@@ -26,13 +26,13 @@ import { ROUTE_OPTIONS, type Route } from '@/app/routes';
 import { useToasts } from '@/lib/use-toasts';
 import { useProfile, useSession, useSignOut } from '@/lib/auth';
 
-interface AppTweaks {
+type AppTweaks = {
   hue: number;
   dark: boolean;
   density: 'compact' | 'regular' | 'comfy';
   radius: 'sharp' | 'regular' | 'rounded';
   font: 'Inter' | 'Plus Jakarta Sans' | 'Manrope' | 'Nunito';
-}
+};
 
 const TWEAK_DEFAULTS: AppTweaks = {
   hue: 28,
