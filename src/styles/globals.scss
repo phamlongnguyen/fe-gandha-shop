@@ -5,6 +5,7 @@
 @use './base';
 @use './shell';
 @use './components';
+@use './components/pagination';
 
 @use './features/pos';
 @use './features/inventory';
@@ -13,3 +14,4 @@
 @use './features/customers';
 @use './features/settings';
 @use './features/login';
+@use './features/mobile';

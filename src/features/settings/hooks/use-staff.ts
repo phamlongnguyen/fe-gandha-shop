@@ -19,31 +19,40 @@ type RawProfile = {
   id: string;
   full_name: string;
   role: string;
+  shift: string | null;
+  color: string | null;
+  avatar_url: string | null;
+  is_online: boolean;
   created_at: string;
 };
 
-function mapStaff(r: RawProfile): Staff {
+export interface StaffWithExtras extends Staff {
+  avatarUrl: string | null;
+}
+
+function mapStaff(r: RawProfile): StaffWithExtras {
   return {
     id: r.id,
     name: r.full_name,
     role: ROLE_LABEL[r.role] ?? r.role,
     pin: '••••',
-    shift: '—',
-    color: colorOf(r.id),
-    online: false,
+    shift: r.shift ?? '—',
+    color: r.color ?? colorOf(r.id),
+    online: r.is_online,
+    avatarUrl: r.avatar_url,
   };
 }
 
 export function useStaff() {
   return useQuery({
     queryKey: ['staff'],
-    queryFn: async (): Promise<Staff[]> => {
+    queryFn: async (): Promise<StaffWithExtras[]> => {
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, full_name, role, created_at')
+        .select('id, full_name, role, shift, color, avatar_url, is_online, created_at')
         .order('created_at');
       if (error) throw error;
-      return data.map(mapStaff);
+      return (data as RawProfile[]).map(mapStaff);
     },
   });
 }

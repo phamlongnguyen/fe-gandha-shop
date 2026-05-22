@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { I } from '@/components/icons';
 import PageHead from '@/components/shared/page-head';
+import Pagination from '@/components/shared/pagination';
 import Tabs from '@/components/shared/tabs';
 import QRCode from '@/features/qr/components/qr-code';
 import ProductEditor from './product-editor';
@@ -8,12 +9,14 @@ import { useCategories } from '@/features/categories/hooks/use-categories';
 import {
   useCreateProduct,
   useDeleteProduct,
-  useProducts,
+  useProductsPaged,
   useUpdateProduct,
 } from '@/features/inventory/hooks/use-products';
 import { fmt } from '@/lib/format';
 import type { Product } from '@/types';
 import type { ToastPush } from '@/lib/use-toasts';
+
+const PAGE_SIZE = 50;
 
 interface InventoryProps {
   setScanOpen: (open: boolean) => void;
@@ -25,19 +28,26 @@ type CatFilter = string;
 export default function Inventory({ setScanOpen, toast }: InventoryProps) {
   const [cat, setCat] = useState<CatFilter>('all');
   const [q, setQ] = useState('');
+  const [debouncedQ, setDebouncedQ] = useState('');
+  const [page, setPage] = useState(1);
   const [showQR, setShowQR] = useState<Product | null>(null);
   const [editing, setEditing] = useState<'new' | Product | null>(null);
-  const { data: products = [], isLoading } = useProducts();
   const { data: categories = [] } = useCategories();
+
+  useEffect(() => {
+    const id = setTimeout(() => { setDebouncedQ(q); setPage(1); }, 250);
+    return () => clearTimeout(id);
+  }, [q]);
+
+  useEffect(() => { setPage(1); }, [cat]);
+
+  const { data: pagedResult, isLoading } = useProductsPaged({ page, pageSize: PAGE_SIZE, search: debouncedQ, cat });
+  const items = pagedResult?.rows ?? [];
+  const total = pagedResult?.total ?? 0;
+
   const createProduct = useCreateProduct();
   const updateProduct = useUpdateProduct();
   const deleteProduct = useDeleteProduct();
-
-  const items = products.filter(
-    (p) =>
-      (cat === 'all' || p.cat === cat) &&
-      (q === '' || p.name.toLowerCase().includes(q.toLowerCase()) || p.sku.toLowerCase().includes(q.toLowerCase())),
-  );
 
   const removeProduct = (id: string, name: string) => {
     deleteProduct.mutate(id, {
@@ -50,11 +60,7 @@ export default function Inventory({ setScanOpen, toast }: InventoryProps) {
     <div className="page">
       <PageHead
         title="Sản phẩm & Tồn kho"
-        subtitle={
-          isLoading
-            ? 'Đang tải…'
-            : `${products.length} sản phẩm · ${products.filter((p) => !p.service && p.stock <= p.min).length} cảnh báo tồn`
-        }
+        subtitle={isLoading ? 'Đang tải…' : `${total} sản phẩm`}
         actions={
           <>
             <button className="btn ghost" onClick={() => setScanOpen(true)}>
@@ -74,12 +80,8 @@ export default function Inventory({ setScanOpen, toast }: InventoryProps) {
         value={cat}
         onChange={setCat}
         items={[
-          { value: 'all', label: 'Tất cả', count: products.length },
-          ...categories.map((c) => ({
-            value: c.id,
-            label: c.name,
-            count: products.filter((p) => p.cat === c.id).length,
-          })),
+          { value: 'all', label: 'Tất cả' },
+          ...categories.map((c) => ({ value: c.id, label: c.name })),
         ]}
       />
 
@@ -174,8 +176,12 @@ export default function Inventory({ setScanOpen, toast }: InventoryProps) {
                 </tr>
               );
             })}
+            {items.length === 0 && !isLoading && (
+              <tr><td colSpan={10} style={{ textAlign: 'center', padding: 32, color: 'var(--ink-3)' }}>Không có sản phẩm nào khớp</td></tr>
+            )}
           </tbody>
         </table>
+        <Pagination page={page} pageSize={PAGE_SIZE} total={total} onChange={setPage} />
       </div>
 
       {editing && (
@@ -187,9 +193,13 @@ export default function Inventory({ setScanOpen, toast }: InventoryProps) {
               name: p.name,
               sku: p.sku,
               cat: p.cat,
+              unit: p.unit,
               cost: p.cost,
               price: p.price,
               stock: p.stock,
+              min: p.min,
+              service: p.service ?? false,
+              promo: p.promo ?? null,
             };
             const opts = {
               onSuccess: () => {

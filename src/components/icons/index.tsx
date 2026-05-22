@@ -53,6 +53,7 @@ export const I = {
   arrowUp: (p: IconProps) => <Ic {...p} d="M12 19V5m0 0-6 6m6-6 6 6" />,
   arrowDown: (p: IconProps) => <Ic {...p} d="M12 5v14m0 0-6-6m6 6 6-6" />,
   arrowRight: (p: IconProps) => <Ic {...p} d="M5 12h14m0 0-6-6m6 6-6 6" />,
+  arrowLeft: (p: IconProps) => <Ic {...p} d="M19 12H5m0 0 6-6m-6 6 6 6" />,
   cash: (p: IconProps) => <Ic {...p} d={<><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/></>} />,
   card: (p: IconProps) => <Ic {...p} d={<><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></>} />,
   warning: (p: IconProps) => <Ic {...p} d={<><path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v5M12 18h0" strokeLinecap="round"/></>} />,

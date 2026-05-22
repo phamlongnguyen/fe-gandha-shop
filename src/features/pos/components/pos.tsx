@@ -6,7 +6,7 @@ import QRScanner from '@/features/qr/components/qr-scanner';
 import PaymentQR from '@/features/qr/components/payment-qr';
 import { useCategories } from '@/features/categories/hooks/use-categories';
 import { useProducts } from '@/features/inventory/hooks/use-products';
-import { useCustomers } from '@/features/customers/hooks/use-customers';
+import { useCustomersAll } from '@/features/customers/hooks/use-customers';
 import { useCreateOrder, type PaymentMethod } from '@/features/pos/hooks/use-create-order';
 import { PROMOS } from '@/mocks/promos';
 import { applyProductPromo } from '@/lib/promo';
@@ -56,7 +56,7 @@ export default function POS({ scanOpen, setScanOpen, toast }: POSProps) {
 
   const { data: allProducts = [] } = useProducts();
   const { data: categories = [] } = useCategories();
-  const { data: customers = [] } = useCustomers();
+  const { data: customers = [] } = useCustomersAll();
   const createOrder = useCreateOrder();
   const customer = customers.find((c) => c.id === customerId)?.name ?? 'Khách lẻ';
 
@@ -196,7 +196,9 @@ export default function POS({ scanOpen, setScanOpen, toast }: POSProps) {
         customerId,
         items: cart.map((x) => ({ product_id: x.id, quantity: x.qty })),
         payment: PAY_TO_BE[payMethod],
-        note: promo ? `Mã: ${promo.code}` : undefined,
+        promoCode: promo?.code ?? null,
+        discountPct: discount,
+        receivedAmount: payMethod === 'cash' ? receivedAmt : null,
       },
       {
         onSuccess: (orderId) => {

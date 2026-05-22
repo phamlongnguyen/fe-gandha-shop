@@ -1,0 +1,56 @@
+// Pagination — reusable list nav.
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+}
+
+.pagination-info {
+  color: var(--ink-3);
+
+  em {
+    font-style: normal;
+    color: var(--ink-4);
+  }
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.pagination-page {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: var(--radius-sm);
+  cursor: default;
+  transition: background 0.12s, color 0.12s;
+
+  &:hover {
+    background: var(--surface-2);
+  }
+
+  &.on {
+    background: var(--accent);
+    color: white;
+  }
+}
+
+.pagination-ellipsis {
+  color: var(--ink-4);
+  padding: 0 4px;
+}

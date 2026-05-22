@@ -1,99 +1,117 @@
-import type { ReactNode } from 'react';
+import { useState } from 'react';
 import { I } from '@/components/icons';
 import PageHead from '@/components/shared/page-head';
 import { useStaff } from '@/features/settings/hooks/use-staff';
+import { useDevices, useStoreConfig, useUpdateStoreConfig } from '@/features/settings/hooks/use-store-config';
+import type { ToastPush } from '@/lib/use-toasts';
 
-interface DeviceRow {
-  name: string;
-  status: string;
-  icon: ReactNode;
-  off?: boolean;
+const DEVICE_ICON: Record<string, string> = {
+  receipt_printer: '🖨',
+  label_printer: '🏷',
+  qr_scanner: '📷',
+  cash_drawer: '💵',
+};
+
+interface SettingsProps {
+  toast?: ToastPush;
 }
 
-const DEVICES: DeviceRow[] = [
-  { name: 'Máy in hóa đơn K58', status: 'Đã kết nối', icon: <I.print size={20} /> },
-  { name: 'Máy in tem QR Xprinter XP-365B', status: 'Đã kết nối', icon: <I.qr size={20} /> },
-  { name: 'Đầu đọc QR USB Honeywell', status: 'Đã kết nối', icon: <I.scan size={20} /> },
-  { name: 'Két tiền điện tử', status: 'Chưa kết nối', icon: <I.cash size={20} />, off: true },
-];
+export default function Settings({ toast }: SettingsProps) {
+  const { data: staff = [], isLoading: staffLoading } = useStaff();
+  const { data: config } = useStoreConfig();
+  const { data: devices = [] } = useDevices();
+  const updateConfig = useUpdateStoreConfig();
 
-export default function Settings() {
-  const { data: staff = [], isLoading } = useStaff();
+  const [storeName, setStoreName] = useState('');
+  const [address, setAddress] = useState('');
+  const [phone, setPhone] = useState('');
+  const [bankAccount, setBankAccount] = useState('');
+  const [defaultMinStock, setDefaultMinStock] = useState(10);
+  const [configLoaded, setConfigLoaded] = useState(false);
+
+  if (config && !configLoaded) {
+    setStoreName(config.store_name);
+    setAddress(config.address ?? '');
+    setPhone(config.phone ?? '');
+    setBankAccount(config.bank_account ?? '');
+    setDefaultMinStock(config.default_min_stock);
+    setConfigLoaded(true);
+  }
+
+  const saveConfig = () => {
+    updateConfig.mutate(
+      { store_name: storeName, address: address || null, phone: phone || null, bank_account: bankAccount || null, default_min_stock: defaultMinStock },
+      {
+        onSuccess: () => toast?.('Đã lưu thông tin cửa hàng'),
+        onError: (e) => toast?.(e instanceof Error ? e.message : 'Lỗi khi lưu', 'warn'),
+      },
+    );
+  };
 
   return (
     <div className="page">
       <PageHead title="Cài đặt" subtitle="Thông tin cửa hàng, nhân viên gia đình, máy in & phương thức thanh toán" />
+
       <div className="grid-2-1">
         <div className="card">
           <div className="card-head">
             <div className="card-title">Nhân viên gia đình</div>
-            <button className="btn ghost compact">
-              <I.plus size={13} /> Thêm
-            </button>
+            <button className="btn ghost compact"><I.plus size={13} /> Thêm</button>
           </div>
           <div className="staff-list">
-            {isLoading && <div style={{ padding: 12, color: 'var(--ink-3)' }}>Đang tải…</div>}
+            {staffLoading && <div style={{ padding: 12, color: 'var(--ink-3)' }}>Đang tải…</div>}
             {staff.map((s) => (
               <div key={s.id} className="staff-row">
                 <div className="staff-av" style={{ background: s.color }}>
-                  {s.name[0]}
+                  {s.avatarUrl
+                    ? <img src={s.avatarUrl} alt={s.name} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                    : s.name[0]}
                 </div>
                 <div className="staff-meta">
                   <b>{s.name}</b>
-                  <span>
-                    {s.role} · Ca {s.shift}
-                  </span>
+                  <span>{s.role} · Ca {s.shift}</span>
                 </div>
                 {s.online && <span className="pill ok">Đang online</span>}
-                <button className="iconbtn sm">
-                  <I.edit size={13} />
-                </button>
+                <button className="iconbtn sm"><I.edit size={13} /></button>
               </div>
             ))}
           </div>
         </div>
+
         <div className="card">
           <div className="card-head">
             <div className="card-title">Cửa hàng</div>
+            <button className="btn ghost compact" onClick={saveConfig} disabled={updateConfig.isPending}>
+              {updateConfig.isPending ? 'Đang lưu…' : 'Lưu'}
+            </button>
           </div>
           <div className="form">
-            <label>
-              Tên cửa hàng
-              <input defaultValue="Gandha Shop" />
-            </label>
-            <label>
-              Địa chỉ
-              <input defaultValue="123 Nguyễn Văn Trỗi, Phú Nhuận, TP.HCM" />
-            </label>
-            <label>
-              Số điện thoại
-              <input defaultValue="0908 *** 365" />
-            </label>
-            <label>
-              Tài khoản nhận chuyển khoản
-              <input defaultValue="VCB · 9704 0612 3456 7890 · GANDHA SHOP" />
-            </label>
+            <label>Tên cửa hàng<input value={storeName} onChange={(e) => setStoreName(e.target.value)} /></label>
+            <label>Địa chỉ<input value={address} onChange={(e) => setAddress(e.target.value)} /></label>
+            <label>Số điện thoại<input value={phone} onChange={(e) => setPhone(e.target.value)} /></label>
+            <label>Tài khoản nhận chuyển khoản<input value={bankAccount} onChange={(e) => setBankAccount(e.target.value)} /></label>
             <label>
               Mức tồn cảnh báo mặc định
-              <input type="number" defaultValue={10} />
+              <input type="number" value={defaultMinStock} onChange={(e) => setDefaultMinStock(Number(e.target.value) || 10)} />
             </label>
           </div>
         </div>
       </div>
 
       <div className="card">
-        <div className="card-head">
-          <div className="card-title">Thiết bị</div>
-        </div>
+        <div className="card-head"><div className="card-title">Thiết bị</div></div>
         <div className="device-grid">
-          {DEVICES.map((d, i) => (
-            <div key={i} className={`device ${d.off ? 'off' : ''}`}>
-              <div className="dev-ic">{d.icon}</div>
+          {devices.length === 0 && (
+            <div style={{ padding: 16, color: 'var(--ink-3)', gridColumn: '1/-1' }}>Chưa có thiết bị nào. Thêm qua Studio hoặc API.</div>
+          )}
+          {devices.map((d) => (
+            <div key={d.id} className={`device ${d.status === 'disconnected' ? 'off' : ''}`}>
+              <div className="dev-ic">{DEVICE_ICON[d.type] ?? '⚙'}</div>
               <div className="dev-meta">
                 <b>{d.name}</b>
-                <span>{d.status}</span>
+                <span>{d.status === 'connected' ? 'Đã kết nối' : d.status === 'error' ? 'Lỗi' : 'Chưa kết nối'}</span>
               </div>
-              <button className="btn ghost compact">{d.off ? 'Kết nối' : 'Kiểm tra'}</button>
+              <button className="btn ghost compact">{d.status === 'connected' ? 'Kiểm tra' : 'Kết nối'}</button>
             </div>
           ))}
         </div>

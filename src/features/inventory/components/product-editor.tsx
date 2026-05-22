@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { I } from '@/components/icons';
 import { useCategories } from '@/features/categories/hooks/use-categories';
 import { useProducts } from '@/features/inventory/hooks/use-products';
+import { uploadProductImage } from '@/lib/storage';
 import { fmt, makeSku } from '@/lib/format';
 import type { Product, ProductPromo, ProductPromoType } from '@/types';
 
@@ -28,6 +29,23 @@ export default function ProductEditor({ product, onClose, onSave }: ProductEdito
   const isNew = !product;
   const { data: categories = [] } = useCategories();
   const { data: products = [] } = useProducts();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [imgUploading, setImgUploading] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+  const handleImagePick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!product?.id || !e.target.files?.[0]) return;
+    const file = e.target.files[0];
+    setImgUploading(true);
+    try {
+      const url = await uploadProductImage(product.id, file);
+      setImageUrl(url);
+    } catch {
+      // ignore upload error in editor — toast shown by parent
+    } finally {
+      setImgUploading(false);
+    }
+  };
 
   const [form, setForm] = useState<ProductDraft>(() => ({
     name: product?.name ?? '',
@@ -100,6 +118,25 @@ export default function ProductEditor({ product, onClose, onSave }: ProductEdito
         </div>
 
         <div className="pe-body">
+          {!isNew && (
+            <div className="pe-section">
+              <div className="pe-section-title">Hình ảnh sản phẩm</div>
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                {imageUrl && (
+                  <img src={imageUrl} alt="preview" style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 'var(--radius)', border: '1px solid var(--line)' }} />
+                )}
+                <button
+                  type="button"
+                  className="btn ghost compact"
+                  onClick={() => fileRef.current?.click()}
+                  disabled={imgUploading}
+                >
+                  <I.download size={13} /> {imgUploading ? 'Đang upload…' : 'Tải ảnh lên'}
+                </button>
+                <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleImagePick} />
+              </div>
+            </div>
+          )}
           <div className="pe-section">
             <div className="pe-row pe-row-full">
               <label>

@@ -31,14 +31,44 @@ function mapCustomer(r: RawCustomer): Customer {
   };
 }
 
-export function useCustomers() {
+export interface CustomersOptions {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+}
+
+export function useCustomers(opts: CustomersOptions = {}) {
+  const { page = 1, pageSize = 24, search = '' } = opts;
   return useQuery({
-    queryKey: ['customers'],
+    queryKey: ['customers', { page, pageSize, search }],
+    queryFn: async (): Promise<{ rows: Customer[]; total: number }> => {
+      let q = supabase
+        .from('customers')
+        .select('id, name, phone, address, note', { count: 'exact' })
+        .order('name');
+      if (search.trim()) {
+        const s = search.replace(/[%_]/g, '\\$&');
+        q = q.or(`name.ilike.%${s}%,phone.ilike.%${s}%`);
+      }
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      const { data, error, count } = await q.range(from, to);
+      if (error) throw error;
+      return { rows: data.map(mapCustomer), total: count ?? 0 };
+    },
+  });
+}
+
+/** Full list (capped 500) for dropdowns. */
+export function useCustomersAll() {
+  return useQuery({
+    queryKey: ['customers', 'all'],
     queryFn: async (): Promise<Customer[]> => {
       const { data, error } = await supabase
         .from('customers')
         .select('id, name, phone, address, note')
-        .order('name');
+        .order('name')
+        .limit(500);
       if (error) throw error;
       return data.map(mapCustomer);
     },

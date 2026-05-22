@@ -10,9 +10,12 @@ export interface CreateOrderItem {
 }
 
 export interface CreateOrderInput {
-  customerId: string | null;
   items: CreateOrderItem[];
-  payment: PaymentMethod;
+  customerId?: string | null;
+  payment?: PaymentMethod;
+  promoCode?: string | null;
+  discountPct?: number;
+  receivedAmount?: number | null;
   note?: string;
 }
 
@@ -21,9 +24,12 @@ export function useCreateOrder() {
   return useMutation({
     mutationFn: async (input: CreateOrderInput): Promise<string> => {
       const { data, error } = await supabase.rpc('create_order', {
-        p_customer_id: input.customerId as string,
         p_items: input.items as unknown as Json,
-        p_payment: input.payment,
+        p_customer_id: input.customerId ?? undefined,
+        p_payment: input.payment ?? 'cash',
+        p_promo_code: input.promoCode ?? undefined,
+        p_discount_pct: input.discountPct ?? 0,
+        p_received_amount: input.receivedAmount ?? undefined,
         p_note: input.note,
       });
       if (error) throw error;
@@ -32,6 +38,8 @@ export function useCreateOrder() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['orders'] });
       qc.invalidateQueries({ queryKey: ['products'] });
+      qc.invalidateQueries({ queryKey: ['promos'] });
+      qc.invalidateQueries({ queryKey: ['analytics'] });
     },
   });
 }

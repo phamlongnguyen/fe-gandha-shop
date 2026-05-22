@@ -1,10 +1,9 @@
+import { NavLink } from 'react-router-dom';
 import { I } from '@/components/icons';
 import { fmt } from '@/lib/format';
 import type { Route } from '@/app/routes';
 
 interface SidebarProps {
-  active: Route;
-  onNav: (route: Route) => void;
   mobileOpen: boolean;
   setMobileOpen: (open: boolean) => void;
 }
@@ -29,7 +28,7 @@ const NAV: NavEntry[] = [
   { id: 'settings', label: 'Cài đặt', icon: I.settings },
 ];
 
-export default function Sidebar({ active, onNav, mobileOpen, setMobileOpen }: SidebarProps) {
+export default function Sidebar({ mobileOpen, setMobileOpen }: SidebarProps) {
   return (
     <>
       {mobileOpen && <div className="sidebar-veil" onClick={() => setMobileOpen(false)} />}
@@ -50,18 +49,16 @@ export default function Sidebar({ active, onNav, mobileOpen, setMobileOpen }: Si
           {NAV.map((n) => {
             const Ic = n.icon;
             return (
-              <button
+              <NavLink
                 key={n.id}
-                className={`navitem ${active === n.id ? 'on' : ''}`}
-                onClick={() => {
-                  onNav(n.id);
-                  setMobileOpen(false);
-                }}
+                to={`/${n.id}`}
+                className={({ isActive }) => `navitem ${isActive ? 'on' : ''}`}
+                onClick={() => setMobileOpen(false)}
               >
                 <Ic size={18} />
                 <span>{n.label}</span>
                 {n.badge && <em>{n.badge}</em>}
-              </button>
+              </NavLink>
             );
           })}
         </nav>

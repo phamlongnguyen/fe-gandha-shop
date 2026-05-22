@@ -12,8 +12,12 @@ const METHOD_LABEL: Record<string, string> = {
 type RawOrder = {
   id: string;
   total: number;
+  cost_total: number;
   payment_method: string;
   status: string;
+  promo_code: string | null;
+  promo_amount: number;
+  discount_amount: number;
   created_at: string;
   customer: { name: string } | null;
   creator: { full_name: string } | null;
@@ -43,33 +47,41 @@ function mapOrder(r: RawOrder): OrderSummary {
     time: formatTime(r.created_at),
     items: r.items.reduce((s, i) => s + i.quantity, 0),
     total: Number(r.total),
-    profit: 0,
+    profit: Number(r.total) - Number(r.cost_total),
     method: METHOD_LABEL[r.payment_method] ?? r.payment_method,
     staff: r.creator?.full_name ?? '—',
     customer: r.customer?.name ?? 'Khách lẻ',
   };
 }
 
-export interface OrdersFilter {
-  limit?: number;
+const ORDER_SELECT =
+  'id, total, cost_total, payment_method, status, promo_code, promo_amount, discount_amount, created_at, ' +
+  'customer:customers(name), creator:profiles(full_name), items:order_items(quantity)';
+
+export interface OrdersOptions {
+  page?: number;
+  pageSize?: number;
   paymentMethod?: 'cash' | 'transfer' | 'card' | 'other';
 }
 
-export function useOrders(filter: OrdersFilter = {}) {
+export function useOrders(opts: OrdersOptions = {}) {
+  const { page = 1, pageSize = 50, paymentMethod } = opts;
   return useQuery({
-    queryKey: ['orders', filter],
-    queryFn: async (): Promise<OrderSummary[]> => {
+    queryKey: ['orders', { page, pageSize, paymentMethod }],
+    queryFn: async (): Promise<{ rows: OrderSummary[]; total: number }> => {
       let q = supabase
         .from('orders')
-        .select(
-          'id, total, payment_method, status, created_at, customer:customers(name), creator:profiles(full_name), items:order_items(quantity)',
-        )
-        .order('created_at', { ascending: false })
-        .limit(filter.limit ?? 50);
-      if (filter.paymentMethod) q = q.eq('payment_method', filter.paymentMethod);
-      const { data, error } = await q;
+        .select(ORDER_SELECT, { count: 'exact' })
+        .order('created_at', { ascending: false });
+      if (paymentMethod) q = q.eq('payment_method', paymentMethod);
+      const from = (page - 1) * pageSize;
+      const to = from + pageSize - 1;
+      const { data, error, count } = await q.range(from, to);
       if (error) throw error;
-      return (data as unknown as RawOrder[]).map(mapOrder);
+      return {
+        rows: (data as unknown as RawOrder[]).map(mapOrder),
+        total: count ?? 0,
+      };
     },
   });
 }
@@ -82,7 +94,9 @@ export function useOrder(id: string | undefined) {
       const { data, error } = await supabase
         .from('orders')
         .select(
-          'id, total, payment_method, status, created_at, customer:customers(name, phone), creator:profiles(full_name), items:order_items(id, quantity, unit_price, subtotal, product:products(id, name, sku))',
+          'id, total, cost_total, subtotal, payment_method, status, promo_code, promo_amount, discount_pct, discount_amount, received_amount, change_amount, created_at, ' +
+            'customer:customers(name, phone), creator:profiles(full_name), ' +
+            'items:order_items(id, quantity, unit_price, subtotal, product:products(id, name, sku, unit))',
         )
         .eq('id', id!)
         .single();
@@ -105,6 +119,7 @@ export function useCancelOrder() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['orders'] });
       qc.invalidateQueries({ queryKey: ['products'] });
+      qc.invalidateQueries({ queryKey: ['analytics'] });
     },
   });
 }
